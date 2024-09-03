@@ -31,6 +31,22 @@ if 'generate_response' not in st.session_state:
 if 'chat' not in st.session_state:
     st.session_state.chat = ""
 
+def extract_page_number_from_document(doc):
+    # Access the page content from the Document object
+    text = doc[0].page_content
+    
+    # Regular expression pattern to match "Page Number - X" where X is one or more digits
+    pattern = r"Page Number\s*-\s*(\d+)"
+    
+    # Search for the pattern in the text
+    match = re.search(pattern, text)
+    
+    # If a match is found, return the page number as an integer
+    if match:
+        return int(match.group(1))
+    
+    # If no match is found, return None or any other indication of no match
+    return None
 
 def extract_relevant_page_number(question, excel_sheet):
     """
@@ -258,8 +274,7 @@ def create_ui():
         with col1:
             st.image('download.png', width=30)
         with col2:
-            st.write(r + "\n\n")
-            st.write("For more details visit : https://www.amazon.in/Smart-Branding-Book-popular-profitable-ebook/dp/B0BR1JYRNS")
+            st.write(r + "\n")
             # st.write("for more details , please visit :" + post_link)
             # target_language = st.selectbox('Select target language', options=list(LANGUAGES.keys()), key=f'target_language_{idx}')
         # if st.button('Translate', key=f'translate_button_{idx}'):
@@ -316,7 +331,8 @@ def create_ui():
                 response, docs = user_input(question)
                 # print(docs)
                 # page_number_match = re.search(r"Page Number : (\d+)", docs[0].page_content)
-                most_relevant_page = extract_relevant_page_number(question, 'Image_links.xlsx')
+                # most_relevant_page = extract_relevant_page_number(docs, 'Image_links.xlsx')
+                most_relevant_page = extract_page_number_from_document(docs)
                 print(docs)
                 output_text = response.get('output_text', 'No response')  # Extract the 'output_text' from the response
                 st.session_state.chat += str(output_text)
