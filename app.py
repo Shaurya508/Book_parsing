@@ -275,8 +275,8 @@ def create_ui():
         with col1:
             st.image('download.png', width=30)
         with col2:
-            st.write(r + "\n")
-            # st.write("for more details , please visit :" + post_link)
+            st.write(r + "\n\n")
+            st.write("for more details , please visit : https://www.amazon.in/Smart-Branding-Book-popular-profitable-ebook/dp/B0BR1JYRNS")
             # target_language = st.selectbox('Select target language', options=list(LANGUAGES.keys()), key=f'target_language_{idx}')
         # if st.button('Translate', key=f'translate_button_{idx}'):
     
