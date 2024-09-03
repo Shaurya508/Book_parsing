@@ -66,10 +66,10 @@ def user_input(user_question):
     prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
     chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
       # Model for creating vector embeddings
-    new_db = FAISS.load_local("Faiss_Index_BOOK1", embeddings, allow_dangerous_deserialization=True)  # Load the previously saved vector db
-    mq_retriever = MultiQueryRetriever.from_llm(retriever = new_db.as_retriever(search_kwargs={'k': 2}), llm = model )
-    docs1 = mq_retriever.get_relevant_documents(query=user_question)
-    # docs1 = new_db.similarity_search(user_question)
+    new_db = FAISS.load_local("Faiss_Index_BOOK_NEW", embeddings, allow_dangerous_deserialization=True)  # Load the previously saved vector db
+    # mq_retriever = MultiQueryRetriever.from_llm(retriever = new_db.as_retriever(search_kwargs={'k': 2}), llm = model )
+    # docs1 = mq_retriever.get_relevant_documents(query=user_question)
+    docs1 = new_db.similarity_search(user_question , k = 1)
 
     response = chain({"input_documents": docs1, "question": user_question}, return_only_outputs=True)
     return response , docs1
