@@ -210,20 +210,21 @@ def create_ui():
                     st.error("Invalid email or password. Please try again.")
         return
 
-    # st.sidebar.markdown("<h5 style='color: #08daff;'>Popular Questions</h3>", unsafe_allow_html=True)
+    st.sidebar.markdown("<h5 style='color: #08daff;'>Popular Questions</h3>", unsafe_allow_html=True)
 
-    # suggested_questions = [
-    #     "What is Market Mix modelling?",
-    #     "What are Contribution Charts?",
-    #     "Provide code examples from Robyn.",
-    #     "How MMMs can be calibrated and validated?",
-    #     "Why Frequentist MMM is better than Bayesian MMM?"
-    # ]
+    suggested_questions = [
+        "What is Branding ?",
+        "How does a brand grows ?",
+        "Who is responsible for branding ?",
+        "What is the impact of brand building on demand curve ?",
+        "Explain Brand Value Growth Matrix .",
+        "What is Brand Relationship Spectrum ?"
+    ]
 
-    # for i, question in enumerate(suggested_questions):
-    #     if st.sidebar.button(question, key=f"button_{i}", use_container_width=True):
-    #         st.session_state.suggested_question = question
-    #         st.session_state.generate_response = True
+    for i, question in enumerate(suggested_questions):
+        if st.sidebar.button(question, key=f"button_{i}", use_container_width=True):
+            st.session_state.suggested_question = question
+            st.session_state.generate_response = True
 
     # Display the conversation history in reverse order to resemble a chat interface
     chat_container = st.container()
@@ -267,7 +268,7 @@ def create_ui():
                 st.image('download.png', width=30)
             with col2:
                 
-                st.write("Hello, I am Venkat's LinkedIn GPT . How can I help you?")
+                st.write("Hello, I am Smart Branding GPT . How can I help you?")
     for idx , (q, r ,most_relevant_page) in enumerate(st.session_state.conversation_history):
         st.markdown(f"<p style='text-align: right; color: #484f4f;'><b>{q}</b></p>", unsafe_allow_html=True)
         col1, col2 = st.columns([1, 8])
