@@ -1,59 +1,108 @@
-import cv2
+# Required Libraries
 import os
-from pdf2image import convert_from_path
-import pytesseract
+from pathlib import Path
+from tqdm import tqdm
+from PIL import Image
+import fitz  # PyMuPDF
+from tkinter import Tk
+from tkinter.filedialog import askopenfilenames
+import io
 
-# Define the path where the pages and extracted images will be saved
-output_folder = 'extracted_pages'
-image_output_folder = 'extracted_images'
+# Define directories for uploaded files and converted images
+UPLOAD_DIR = Path("uploaded_files")
+CONVERTED_DIR = Path("converted_images")
 
-# Create the folders if they don't exist
-os.makedirs(output_folder, exist_ok=True)
-os.makedirs(image_output_folder, exist_ok=True)
+# Create directories if they don't exist
+UPLOAD_DIR.mkdir(exist_ok=True)
+CONVERTED_DIR.mkdir(exist_ok=True)
 
-# Convert PDF to images
-images = convert_from_path('The Smart Branding Book.pdf')
+# === Utility Functions for Upload and Conversion ===
 
-# Save each page as an image in the specified folder
-for i, img in enumerate(images):
-    page_path = os.path.join(output_folder, f'page_{i}.png')
-    img.save(page_path)
-    print(f'Saved {page_path}')
+def upload_files():
+    """
+    Allows the user to select and upload multiple image and PDF files.
+    Saves them to the UPLOAD_DIR.
+    """
+    print("Please select your image and PDF files (PNG, JPG, JPEG, PDF).")
+    
+    # Hide the main Tkinter window
+    Tk().withdraw()
+    
+    # Open file dialog to select multiple files
+    filenames = askopenfilenames(
+        title="Select Image and PDF Files",
+        filetypes=[("Image and PDF Files", "*.png;*.jpg;*.jpeg;*.pdf")]
+    )
+    
+    for filepath in filenames:
+        file_path = UPLOAD_DIR / Path(filepath).name
+        with open(filepath, 'rb') as f_src, open(file_path, 'wb') as f_dest:
+            f_dest.write(f_src.read())
+        print(f"Uploaded: {file_path.name}")
 
-    # Read the saved page image using OpenCV
-    image = cv2.imread(page_path)
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+def convert_files_to_png():
+    """
+    Converts uploaded image and PDF files to PNG format.
+    Saves all PNG images to the CONVERTED_DIR.
+    Extracts every image from each page of the PDF separately.
+    """
+    print("Converting files to PNG format...")
+    for file in tqdm(UPLOAD_DIR.iterdir(), desc="Converting files"):
+        if file.suffix.lower() in ['.png', '.jpg', '.jpeg']:
+            # Convert image to PNG
+            try:
+                img = Image.open(file).convert('RGB')
+                png_path = CONVERTED_DIR / f"{file.stem}.png"
+                img.save(png_path, 'PNG')
+                print(f"Converted {file.name} to {png_path.name}")
+            except Exception as e:
+                print(f"Error converting {file.name}: {e}")
+        elif file.suffix.lower() == '.pdf':
+            # Extract and convert each image from a PDF page
+            try:
+                pdf_document = fitz.open(file)
+                for page_num in range(len(pdf_document)):
+                    page = pdf_document.load_page(page_num)
+                    images = page.get_images(full=True)
 
-    # Apply edge detection
-    edges = cv2.Canny(gray, 100, 200)
+                    if images:
+                        for img_index, img in enumerate(images):
+                            xref = img[0]
+                            base_image = pdf_document.extract_image(xref)
+                            image_bytes = base_image["image"]
+                            image = Image.open(io.BytesIO(image_bytes))
+                            png_path = CONVERTED_DIR / f"{file.stem}_page_{page_num + 1}_image_{img_index + 1}.png"
+                            image.save(png_path, 'PNG')
+                            print(f"Extracted and saved {file.name} page {page_num + 1}, image {img_index + 1} to {png_path.name}")
+                    else:
+                        print(f"No images found on page {page_num + 1} of {file.name}")
 
-    # Find contours based on the edges detected
-    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                pdf_document.close()
 
-    # Iterate over contours to extract regions containing images
-    for j, contour in enumerate(contours):
-        x, y, w, h = cv2.boundingRect(contour)
+            except Exception as e:
+                print(f"Error extracting images from {file.name}: {e}")
+        else:
+            print(f"Unsupported file format for {file.name}. Skipping.")
 
-        # Set size threshold to filter out non-image contours (like text regions)
-        if w > 100 and h > 100:  # Adjust this threshold as needed
-            # Extract the image region
-            roi = image[y:y+h, x:x+w]
-            
-            # Save the extracted image
-            image_save_path = os.path.join(image_output_folder, f'page_{i}_extracted_image_{j}.png')
-            cv2.imwrite(image_save_path, roi)
-            print(f'Saved {image_save_path}')
+# Optional: Organize Converted Files
+def organize_converted_files():
+    """
+    (Optional) Organizes converted PNG files into subdirectories based on original file names.
+    """
+    # Example implementation if needed
+    pass  # Implement as per your needs
 
-def extract_text_from_pdf(pdf_path):
-    # Convert PDF to images
-    pages = convert_from_path(pdf_path, 300)
+# === Main Function for Upload and Conversion ===
 
-    # Iterate through all the pages and extract text
-    extracted_text = ''
-    for page_number, page_data in enumerate(pages):
-        # Perform OCR on the image
-        text = pytesseract.image_to_string(page_data)
-        extracted_text += f"Page {page_number + 1}:\n{text}\n"
-        if(page_number == 28):
-            break
-    return extracted_text
+def upload_and_convert():
+    """
+    Main function to handle file upload and conversion.
+    """
+    upload_files()
+    convert_files_to_png()
+    # organize_converted_files()  # Uncomment if organization is implemented
+
+# === Execute the Upload and Conversion Process ===
+
+if __name__ == "__main__":
+    upload_and_convert()

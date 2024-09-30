@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from main import user_input
+from main import user_input1, user_input2 , user_input3, user_input4
 from io import BytesIO
 from PIL import Image , UnidentifiedImageError
 import requests
@@ -30,6 +30,31 @@ if 'generate_response' not in st.session_state:
 
 if 'chat' not in st.session_state:
     st.session_state.chat = ""
+
+
+def extract_book_name_from_text(docs):
+    """
+    Extracts the book name from the given text in the format 'Book: <Book Name>, Page Number - X'.
+    
+    Args:
+        text (str): The text containing the book name and page number.
+        
+    Returns:
+        str: The extracted book name if found, otherwise None.
+    """
+    text = docs[0].page_content
+    # Regular expression pattern to match "Book: <Book Name>," where <Book Name> is the book name
+    pattern = r"Book:\s*(.+?)\s*,\s*Page Number"
+    
+    # Search for the pattern in the text
+    match = re.search(pattern, text)
+    
+    # If a match is found, return the book name
+    if match:
+        return match.group(1).strip()  # Strip to remove any leading/trailing whitespace
+    
+    # If no match is found, return None
+    return None
 
 def extract_page_number_from_document(doc):
     # Access the page content from the Document object
@@ -269,7 +294,7 @@ def create_ui():
             with col2:
                 
                 st.write("Hello, I am Smart Branding GPT . How can I help you?")
-    for idx , (q, r ,most_relevant_page) in enumerate(st.session_state.conversation_history):
+    for idx , (q, r ,most_relevant_page,book_name) in enumerate(st.session_state.conversation_history):
         st.markdown(f"<p style='text-align: right; color: #484f4f;'><b>{q}</b></p>", unsafe_allow_html=True)
         col1, col2 = st.columns([1, 8])
         with col1:
@@ -289,10 +314,10 @@ def create_ui():
             # st.write( translated_text + "\n\n" + translate("For more details, please visit", from_lang='en', to_lang=LANGUAGES[target_language]) + ": " + post_link)
         if most_relevant_page is not None:
             # Construct the image filename based on the most relevant page number
-            image_filename = f"Image_{most_relevant_page}.png"
-
+            image_filename = f"{book_name}_page_{most_relevant_page}_image_1.png"
+            # converted_images\The Smart Branding Book_page_1_image_1.png
             # Define the path to the image folder
-            image_folder = 'Images_Book'
+            image_folder = 'converted_images'
 
             # Create the full path to the image
             image_path = os.path.join(image_folder, image_filename)
@@ -318,30 +343,45 @@ def create_ui():
                 question = st.text_input(instr, value=st.session_state.suggested_question, key="input_question", label_visibility='collapsed')
             else:
                 question = st.text_input(instr, key="input_question", placeholder=instr, label_visibility='collapsed')
-        with col2:
-            submit_button = st.form_submit_button(label='Chat')
+    
+        # Add buttons horizontally
+        col_button1, col_button2 = st.columns(2)
+        with col_button1:
+            button1 = st.form_submit_button(label='Chat with The Smart Branding Book')
+            button2 = st.form_submit_button(label='Chat with The Smart Marketing Book v24')
+        with col_button2:
+            button3 = st.form_submit_button(label='Chat with The Smart Advertising Book')
+            button4 = st.form_submit_button(label='Chat with The Soft Skills Book')
+    
+        # Check which button was pressed
+        if question:
+            if st.session_state.query_count >= QUERY_LIMIT:
+                st.warning("You have reached the limit of free queries. Please consider our pricing options for further use.")
+            else:
+                with st.spinner("Generating response..."):
+                    if button1:
+                        response, docs = user_input1(question)
+                    elif button2:
+                        response, docs = user_input2(question)
+                    elif button3:
+                        response, docs = user_input3(question)
+                    elif button4:
+                        response, docs = user_input4(question)
+                    else:
+                        response, docs = None, None  # No button pressed
+    
+                    if response:
+                        most_relevant_page = extract_page_number_from_document(docs)
+                        book_name = extract_book_name_from_text(docs)
+                        print(docs)
+                        output_text = response.get('output_text', 'No response')  # Extract the 'output_text' from the response
+                        st.session_state.chat += str(output_text)
+                        st.session_state.conversation_history.append((question, output_text, most_relevant_page, book_name))
+                        st.session_state.suggested_question = ""  # Reset the suggested question after submission
+                        st.session_state.query_count += 1  # Increment the query count
+                        st.session_state.generate_response = False
+                        st.rerun()
 
-        if submit_button and question:
-            st.session_state.generate_response = True
-
-    if st.session_state.generate_response and question:
-        if st.session_state.query_count >= QUERY_LIMIT:
-            st.warning("You have reached the limit of free queries. Please consider our pricing options for further use.")
-        else:
-            with st.spinner("Generating response..."):
-                response, docs = user_input(question)
-                # print(docs)
-                # page_number_match = re.search(r"Page Number : (\d+)", docs[0].page_content)
-                # most_relevant_page = extract_relevant_page_number(docs, 'Image_links.xlsx')
-                most_relevant_page = extract_page_number_from_document(docs)
-                print(docs)
-                output_text = response.get('output_text', 'No response')  # Extract the 'output_text' from the response
-                st.session_state.chat += str(output_text)
-                st.session_state.conversation_history.append((question, output_text, most_relevant_page))
-                st.session_state.suggested_question = ""  # Reset the suggested question after submission
-                st.session_state.query_count += 1  # Increment the query count
-                st.session_state.generate_response = False
-                st.rerun()
 
     # Scroll to bottom icon
     st.markdown("""
