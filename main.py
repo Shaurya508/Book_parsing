@@ -69,7 +69,7 @@ def user_input(user_question):
     new_db = FAISS.load_local("FAISS_INDEX_ALL_BOOKS", embeddings, allow_dangerous_deserialization=True)  # Load the previously saved vector db
     # mq_retriever = MultiQueryRetriever.from_llm(retriever = new_db.as_retriever(search_kwargs={'k': 5}), llm = model )
     # docs1 = mq_retriever.get_relevant_documents(query=user_question)
-    docs1 = new_db.similarity_search(user_question , k = 3)
+    docs1 = new_db.similarity_search(user_question , k = 6)
     questions_db = FAISS.load_local('FAISS_INDEX_Questions' , embeddings , allow_dangerous_deserialization=True)
     suggested_questions = questions_db.similarity_search(query=user_question, k = 5)
     response = chain({"input_documents": docs1, "question": user_question}, return_only_outputs=True)
