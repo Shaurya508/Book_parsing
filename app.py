@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from main import user_input1, user_input2 , user_input3, user_input4
+from main import user_input1, user_input2 , user_input3, user_input4 , user_input
 from io import BytesIO
 from PIL import Image , UnidentifiedImageError
 import requests
@@ -376,7 +376,8 @@ def create_ui():
                     elif checkbox4:
                         response, docs, suggested_questions = user_input4(question)
                     else:
-                        response, docs = None, None  # No checkbox selected
+                        # response, docs = None, None  # No checkbox selected
+                        response , docs , suggested_questions = user_input(question)
     
                     if response:
                         most_relevant_page = extract_page_number_from_document(docs)
