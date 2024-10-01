@@ -52,27 +52,28 @@ def create_embeddings():
         url_text_chunks.append(f"{chunk}")
     get_vector_store(url_text_chunks)
 
-# def user_input(user_question):
-#     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-#     prompt_template = """
-#     Answer the question from the context provided.Explain in as much details as possible.
-#     Context:\n{context}?\n
-#     Question:\n{question} + Explain in detail .\n
-#     Answer:
-#     """
-#     model = ChatGoogleGenerativeAI(model="gemini-1.0-pro", temperature=0.5)
-#     # repo_id="mistralai/Mistral-7B-Instruct-v0.2"
-#     # model=HuggingFaceEndpoint(repo_id=repo_id,max_length=128,temperature=0.7,token=sec_key)
-#     prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
-#     chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
-#       # Model for creating vector embeddings
-#     new_db = FAISS.load_local("FAISS_INDEX_ALL_BOOKS", embeddings, allow_dangerous_deserialization=True)  # Load the previously saved vector db
-#     # mq_retriever = MultiQueryRetriever.from_llm(retriever = new_db.as_retriever(search_kwargs={'k': 5}), llm = model )
-#     # docs1 = mq_retriever.get_relevant_documents(query=user_question)
-#     docs1 = new_db.similarity_search(user_question , k = 3)
-
-#     response = chain({"input_documents": docs1, "question": user_question}, return_only_outputs=True)
-#     return response , docs1
+def user_input(user_question):
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    prompt_template = """
+    Answer the question from the context provided.Explain in as much details as possible.
+    Context:\n{context}?\n
+    Question:\n{question} + Explain in detail .\n
+    Answer:
+    """
+    model = ChatGoogleGenerativeAI(model="gemini-1.0-pro", temperature=0.5)
+    # repo_id="mistralai/Mistral-7B-Instruct-v0.2"
+    # model=HuggingFaceEndpoint(repo_id=repo_id,max_length=128,temperature=0.7,token=sec_key)
+    prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
+    chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
+      # Model for creating vector embeddings
+    new_db = FAISS.load_local("FAISS_INDEX_ALL_BOOKS", embeddings, allow_dangerous_deserialization=True)  # Load the previously saved vector db
+    # mq_retriever = MultiQueryRetriever.from_llm(retriever = new_db.as_retriever(search_kwargs={'k': 5}), llm = model )
+    # docs1 = mq_retriever.get_relevant_documents(query=user_question)
+    docs1 = new_db.similarity_search(user_question , k = 3)
+    questions_db = FAISS.load_local('FAISS_INDEX_Questions' , embeddings , allow_dangerous_deserialization=True)
+    suggested_questions = questions_db.similarity_search(query=user_question, k = 5)
+    response = chain({"input_documents": docs1, "question": user_question}, return_only_outputs=True)
+    return response , docs1 , suggested_questions
 
 def user_input1(user_question):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
