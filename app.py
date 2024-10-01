@@ -242,8 +242,7 @@ def create_ui():
         "How does a brand grows ?",
         "Who is responsible for branding ?",
         "What is the impact of brand building on demand curve ?",
-        "Explain Brand Value Growth Matrix .",
-        "What is Brand Relationship Spectrum ?"
+        "Explain Brand Value Growth Matrix ."
     ]
 
     for i, question in enumerate(suggested_questions):
@@ -294,7 +293,7 @@ def create_ui():
             with col2:
                 
                 st.write("Hello, I am Smart Branding GPT . How can I help you?")
-    for idx , (q, r ,most_relevant_page,book_name) in enumerate(st.session_state.conversation_history):
+    for idx , (q, r ,most_relevant_page,book_name,suggested_questions) in enumerate(st.session_state.conversation_history):
         st.markdown(f"<p style='text-align: right; color: #484f4f;'><b>{q}</b></p>", unsafe_allow_html=True)
         col1, col2 = st.columns([1, 8])
         with col1:
@@ -312,26 +311,32 @@ def create_ui():
             # Display the translation
             # st.subheader('Translated Text')
             # st.write( translated_text + "\n\n" + translate("For more details, please visit", from_lang='en', to_lang=LANGUAGES[target_language]) + ": " + post_link)
-        if most_relevant_page is not None:
-            # Construct the image filename based on the most relevant page number
-            image_filename = f"{book_name}_page_{most_relevant_page}_image_1.png"
-            # converted_images\The Smart Branding Book_page_1_image_1.png
-            # Define the path to the image folder
-            image_folder = 'converted_images'
+            if most_relevant_page is not None:
+                # Construct the image filename based on the most relevant page number
+                image_filename = f"{book_name}_page_{most_relevant_page}_image_1.png"
+                # converted_images\The Smart Branding Book_page_1_image_1.png
+                # Define the path to the image folder
+                image_folder = 'converted_images'
 
-            # Create the full path to the image
-            image_path = os.path.join(image_folder, image_filename)
+                # Create the full path to the image
+                image_path = os.path.join(image_folder, image_filename)
 
-            # Check if the image file exists
-            if os.path.exists(image_path):
-                # Open and display the image using PIL
-                image = Image.open(image_path)
-                st.image(image, use_column_width=True)
+                # Check if the image file exists
+                if os.path.exists(image_path):
+                    # Open and display the image using PIL
+                    image = Image.open(image_path)
+                    st.image(image, use_column_width=True)
+                else:
+                    print(f"Image for page {most_relevant_page} not found at {image_path}")
             else:
-                print(f"Image for page {most_relevant_page} not found at {image_path}")
-        else:
-            print("Most relevant page not found")
-
+                print("Most relevant page not found")
+            st.write("Explore Similiar questions :")
+            for i, suggested_question in enumerate(suggested_questions):
+                # Ensure unique keys for buttons
+                if(suggested_question.page_content != q):
+                    if st.button(suggested_question.page_content, key=f"suggested_questions_{idx}_{i}", use_container_width=True):
+                        st.session_state.suggested_question = suggested_question.page_content
+                        st.session_state.generate_response = True
 
     # Get user input at the bottom
     st.markdown("---")
@@ -344,31 +349,34 @@ def create_ui():
             else:
                 question = st.text_input(instr, key="input_question", placeholder=instr, label_visibility='collapsed')
     
-        # Add buttons horizontally
-        col_button1, col_button2 = st.columns(2)
-        with col_button1:
-            button1 = st.form_submit_button(label='Chat with The Smart Branding Book')
-            button2 = st.form_submit_button(label='Chat with The Smart Marketing Book v24')
-        with col_button2:
-            button3 = st.form_submit_button(label='Chat with The Smart Advertising Book')
-            button4 = st.form_submit_button(label='Chat with The Soft Skills Book')
+        # Add checkboxes horizontally
+        col_checkbox1, col_checkbox2 = st.columns(2)
+        with col_checkbox1:
+            checkbox1 = st.checkbox(label='Chat with The Smart Branding Book')
+            checkbox2 = st.checkbox(label='Chat with The Smart Marketing Book')
+        with col_checkbox2:
+            checkbox3 = st.checkbox(label='Chat with The Smart Advertising Book')
+            checkbox4 = st.checkbox(label='Chat with The Soft Skills Book')
     
-        # Check which button was pressed
-        if question:
+        # Submit button
+        submit_button = st.form_submit_button(label="Submit")
+    
+        # Check which checkbox was selected after submission
+        if submit_button and question:
             if st.session_state.query_count >= QUERY_LIMIT:
                 st.warning("You have reached the limit of free queries. Please consider our pricing options for further use.")
             else:
                 with st.spinner("Generating response..."):
-                    if button1:
-                        response, docs = user_input1(question)
-                    elif button2:
-                        response, docs = user_input2(question)
-                    elif button3:
-                        response, docs = user_input3(question)
-                    elif button4:
-                        response, docs = user_input4(question)
+                    if checkbox1:
+                        response, docs , suggested_questions = user_input1(question)
+                    elif checkbox2:
+                        response, docs , suggested_questions = user_input2(question)
+                    elif checkbox3:
+                        response, docs, suggested_questions = user_input3(question)
+                    elif checkbox4:
+                        response, docs, suggested_questions = user_input4(question)
                     else:
-                        response, docs = None, None  # No button pressed
+                        response, docs = None, None  # No checkbox selected
     
                     if response:
                         most_relevant_page = extract_page_number_from_document(docs)
@@ -376,11 +384,12 @@ def create_ui():
                         print(docs)
                         output_text = response.get('output_text', 'No response')  # Extract the 'output_text' from the response
                         st.session_state.chat += str(output_text)
-                        st.session_state.conversation_history.append((question, output_text, most_relevant_page, book_name))
+                        st.session_state.conversation_history.append((question, output_text, most_relevant_page, book_name , suggested_questions))
                         st.session_state.suggested_question = ""  # Reset the suggested question after submission
                         st.session_state.query_count += 1  # Increment the query count
                         st.session_state.generate_response = False
                         st.rerun()
+
 
 
     # Scroll to bottom icon

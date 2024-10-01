@@ -92,9 +92,10 @@ def user_input1(user_question):
     # mq_retriever = MultiQueryRetriever.from_llm(retriever = new_db.as_retriever(search_kwargs={'k': 5}), llm = model )
     # docs1 = mq_retriever.get_relevant_documents(query=user_question)
     docs1 = new_db.similarity_search(user_question , k = 3)
-
+    questions_db = FAISS.load_local('FAISS_INDEX_Questions' , embeddings , allow_dangerous_deserialization=True)
+    suggested_questions = questions_db.similarity_search(query=user_question, k = 5)
     response = chain({"input_documents": docs1, "question": user_question}, return_only_outputs=True)
-    return response , docs1
+    return response , docs1 , suggested_questions
 
 def user_input2(user_question):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
@@ -114,9 +115,10 @@ def user_input2(user_question):
     # mq_retriever = MultiQueryRetriever.from_llm(retriever = new_db.as_retriever(search_kwargs={'k': 5}), llm = model )
     # docs1 = mq_retriever.get_relevant_documents(query=user_question)
     docs1 = new_db.similarity_search(user_question , k = 3)
-
+    questions_db = FAISS.load_local('FAISS_INDEX_Questions' , embeddings , allow_dangerous_deserialization=True)
+    suggested_questions = questions_db.similarity_search(query=user_question, k = 5)
     response = chain({"input_documents": docs1, "question": user_question}, return_only_outputs=True)
-    return response , docs1
+    return response , docs1 ,suggested_questions
 
 def user_input3(user_question):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
@@ -136,9 +138,10 @@ def user_input3(user_question):
     # mq_retriever = MultiQueryRetriever.from_llm(retriever = new_db.as_retriever(search_kwargs={'k': 5}), llm = model )
     # docs1 = mq_retriever.get_relevant_documents(query=user_question)
     docs1 = new_db.similarity_search(user_question , k = 3)
-
+    questions_db = FAISS.load_local('FAISS_INDEX_Questions' , embeddings , allow_dangerous_deserialization=True)
+    suggested_questions = questions_db.similarity_search(query=user_question, k = 5)
     response = chain({"input_documents": docs1, "question": user_question}, return_only_outputs=True)
-    return response , docs1
+    return response , docs1 , suggested_questions
 
 def user_input4(user_question):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
@@ -158,10 +161,10 @@ def user_input4(user_question):
     # mq_retriever = MultiQueryRetriever.from_llm(retriever = new_db.as_retriever(search_kwargs={'k': 5}), llm = model )
     # docs1 = mq_retriever.get_relevant_documents(query=user_question)
     docs1 = new_db.similarity_search(user_question , k = 3)
-
+    questions_db = FAISS.load_local('FAISS_INDEX_Questions' , embeddings , allow_dangerous_deserialization=True)
+    suggested_questions = questions_db.similarity_search(query=user_question, k = 5)
     response = chain({"input_documents": docs1, "question": user_question}, return_only_outputs=True)
-    return response , docs1
-
+    return response , docs1,suggested_questions
 
 def main():
     create_embeddings()
